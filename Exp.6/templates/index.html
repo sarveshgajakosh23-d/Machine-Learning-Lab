@@ -1,0 +1,308 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Prediction</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f1ea;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #b91c2f;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 25px;
+            background: #b91c2f;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #result {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        #result.show {
+            display: block;
+        }
+
+        .positive, .error {
+            background: #ffe3e3;
+            color: #a00000;
+        }
+
+        .negative {
+            background: #dff8e7;
+            color: #126b36;
+        }
+
+        @media (max-width: 550px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Heart Disease Risk Predictor</h1>
+
+    <form id="predictForm">
+
+        <div class="grid">
+            <div>
+                <label>Age</label>
+                <input type="number" name="age"
+                       min="1" max="120" required>
+            </div>
+
+            <div>
+                <label>Sex</label>
+                <select name="sex" required>
+                    <option value="">Select</option>
+                    <option value="1">Male</option>
+                    <option value="0">Female</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Chest Pain Type</label>
+                <select name="cp" required>
+                    <option value="">Select</option>
+                    <option value="0">Typical Angina</option>
+                    <option value="1">Atypical Angina</option>
+                    <option value="2">Non-Anginal Pain</option>
+                    <option value="3">Asymptomatic</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Resting Blood Pressure</label>
+                <input type="number" name="trestbps"
+                       min="60" max="260" required>
+            </div>
+
+            <div>
+                <label>Cholesterol</label>
+                <input type="number" name="chol"
+                       min="80" max="700" required>
+            </div>
+
+            <div>
+                <label>Maximum Heart Rate</label>
+                <input type="number" name="thalach"
+                       min="50" max="250" required>
+            </div>
+
+            <div>
+                <label>Fasting Blood Sugar &gt; 120?</label>
+                <select name="fbs" required>
+                    <option value="">Select</option>
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Exercise Induced Angina</label>
+                <select name="exang" required>
+                    <option value="">Select</option>
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Resting ECG</label>
+                <select name="restecg" required>
+                    <option value="">Select</option>
+                    <option value="0">Normal</option>
+                    <option value="1">ST-T Abnormality</option>
+                    <option value="2">Left Ventricular Hypertrophy</option>
+                </select>
+            </div>
+
+            <div>
+                <label>ST Depression (Oldpeak)</label>
+                <input type="number" name="oldpeak"
+                       min="0" max="10" step="0.1" required>
+            </div>
+
+            <div>
+                <label>Slope</label>
+                <select name="slope" required>
+                    <option value="">Select</option>
+                    <option value="0">Upsloping</option>
+                    <option value="1">Flat</option>
+                    <option value="2">Downsloping</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Major Vessels (CA)</label>
+                <select name="ca" required>
+                    <option value="">Select</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Thalassemia</label>
+                <select name="thal" required>
+                    <option value="">Select</option>
+                    <option value="0">Unknown</option>
+                    <option value="1">Normal</option>
+                    <option value="2">Fixed Defect</option>
+                    <option value="3">Reversible Defect</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" id="predictBtn">
+            Predict
+        </button>
+    </form>
+
+    <div id="result" role="status" aria-live="polite"></div>
+
+    <p>
+      This model developed by Mr. Ruturaj Nandkumar Ghadage.
+    </p>
+</div>
+
+<script>
+const form = document.getElementById("predictForm");
+const result = document.getElementById("result");
+const button = document.getElementById("predictBtn");
+
+function showResult(type, title, message) {
+    result.className = "show " + type;
+    result.replaceChildren();
+
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+
+    const description = document.createElement("p");
+    description.textContent = message;
+
+    result.append(heading, description);
+}
+
+form.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    button.disabled = true;
+    button.textContent = "Predicting...";
+
+    const payload = {};
+
+    new FormData(form).forEach((value, key) => {
+        payload[key] = Number(value);
+    });
+
+    try {
+        const response = await fetch("/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const raw = await response.text();
+        let data;
+
+        try {
+            data = JSON.parse(raw);
+        } catch {
+            throw new Error(
+                "The server returned an invalid response. Check Flask."
+            );
+        }
+
+        if (!response.ok) {
+            throw new Error(data.error || "Prediction failed.");
+        }
+
+        if (data.prediction === undefined || !data.label) {
+            throw new Error("The server did not return a valid prediction.");
+        }
+
+        const positive = Number(data.prediction) === 1;
+        const confidence = data.confidence;
+
+        showResult(
+            positive ? "positive" : "negative",
+            data.label,
+            confidence == null
+                ? "Prediction received from the model."
+                : "Model confidence: " + confidence + "%"
+        );
+
+    } catch (error) {
+        showResult(
+            "error",
+            "Prediction Error",
+            error.message + " Make sure the Flask server is running."
+        );
+        console.error("Prediction error:", error);
+
+    } finally {
+        button.disabled = false;
+        button.textContent = "Predict";
+    }
+});
+</script>
+</body>
+</html>
